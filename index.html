@@ -106,19 +106,6 @@
       color: #728a9f; font-weight: 600;
     }
 
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    .btn {
-      border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700;
-      cursor: pointer; transition: .2s transform, .2s filter, .2s background-color;
-      box-shadow: var(--shadow);
-    }
-    .btn:active { transform: translateY(1px); filter: saturate(.9); }
-    .btn-primary { background: var(--primary); color: #fff; }
-    .btn-primary:hover { background: var(--primary-600); }
-    .btn-outline { background: #fff; color: var(--primary); border: 1.5px solid #cfe2f8; }
-    .btn-success { background: var(--ok); color: #fff; }
-    .btn-wa { background: #25D366; color: #fff; }
-
     .kpis { display: grid; gap: 12px; grid-template-columns: repeat(1, minmax(0, 1fr)); }
     @media (min-width: 720px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (min-width: 1024px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -149,14 +136,14 @@
     .footer { margin: 22px 0 8px; color: #6b8196; font-size: 12px; text-align: center; }
 
     @media print {
-      .header, details, .actions .btn-outline, .btn-wa { display: none !important; }
+      .header, details { display: none !important; }
       body { background: #fff; }
       .card { box-shadow: none; border: none; }
       .kpi strong { font-size: 18px; }
     }
 
     /* ======================================================= */
-    /* 🔥 NUEVO: Logo flotante de GNU en la esquina IZQUIERDA */
+    /* 🔥 Logo flotante de GNU en la esquina IZQUIERDA */
     /* ======================================================= */
     .esquina-gnu {
       position: fixed;
@@ -176,12 +163,12 @@
       box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
     }
     .esquina-gnu img {
-      max-height: 45px; /* Ajusta este tamaño si el logo es muy grande */
+      max-height: 45px;
       display: block;
     }
 
     /* ======================================================= */
-    /* 🔥 NUEVO: Logo flotante de Sparky en la esquina DERECHA */
+    /* 🔥 Logo flotante de Sparky en la esquina DERECHA */
     /* ======================================================= */
     .esquina-sparky {
       position: fixed;
@@ -255,7 +242,7 @@
           <div class="field">
             <label for="gastoGasolina">¿Cuánto gastas semanalmente en gasolina? <span class="note">(MXN)</span></label>
             <span class="prefix">$</span>
-            <!-- AGREGUÉ oninput="calcularAhorro()" para que calcule automáticamente sin botones -->
+            <!-- oninput calcula automáticamente al escribir -->
             <input type="number" id="gastoGasolina" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" placeholder="Ej. 1200" aria-describedby="ayudaGasto" required />
             <small id="ayudaGasto" class="note">Usa números positivos. Este valor se utiliza para calcular litros consumidos por semana.</small>
           </div>
@@ -364,9 +351,8 @@
       return isNaN(n) ? fallback : n;
     }
 
-    function limpiar() {
+    function limpiarInicial() {
       q('#form').reset();
-      // Restablecer valores por defecto de avanzados
       q('#precioGasolina').value = '23.99';
       q('#precioGNVConFin').value = '20.00';
       q('#abonoPorLitro').value = '6.76';
@@ -382,12 +368,9 @@
 
       if (window.myChartAhorro) { window.myChartAhorro.destroy(); }
       if (window.myChartFinanciamiento) { window.myChartFinanciamiento.destroy(); }
-      
-      // Llamamos a calcularAhorro para ocultar todo correctamente
-      // Pero si no hay dato, solo reiniciamos. 
     }
 
-    // ===== Núcleo de cálculo (manteniendo fórmulas y lógica original) =====
+    // ===== Núcleo de cálculo =====
     function calcularAhorro() {
       if (window.myChartAhorro) window.myChartAhorro.destroy();
       if (window.myChartFinanciamiento) window.myChartFinanciamiento.destroy();
@@ -399,7 +382,6 @@
       const precioGNVReal = leerNumero('precioGNVReal', 13.24);
       const financiamientoTotal = leerNumero('financiamientoTotal', 32000);
 
-      // Si el campo está vacío, no hacemos nada
       if (isNaN(gastoGasolina) || gastoGasolina <= 0) {
         return;
       }
@@ -411,14 +393,13 @@
 
       const meses = Array.from({ length: 24 }, (_, i) => i + 1);
 
-      // Progresión del financiamiento (igual a la lógica original)
       let acumuladoFin = 0;
-      let finMes = 24; // marcador de fin de pago
+      let finMes = 24;
       let alcanzado = false;
       const datosFin = meses.map((mes) => {
         if (!alcanzado && (mes === 18 || (acumuladoFin + pagoMensual) >= financiamientoTotal)) {
           acumuladoFin = financiamientoTotal;
-          finMes = mes - 0.9999; // trazo de línea entre meses
+          finMes = mes - 0.9999;
           alcanzado = true;
         } else if (!alcanzado) {
           acumuladoFin += pagoMensual;
@@ -426,7 +407,6 @@
         return acumuladoFin;
       });
 
-      // Ahorro acumulado con/ sin financiamiento (misma lógica)
       let acumuladoAhorro = 0;
       const datosAhorro = meses.map((mes) => {
         const ahorroMes = mes <= finMes ? ahorroMensualConFin : ahorroMensualSinFin;
@@ -434,14 +414,12 @@
         return Math.max(0, acumuladoAhorro);
       });
 
-      // KPIs (manteniendo definiciones originales)
       const ahorroSemanal = litrosConsumidos * (precioGasolina - precioGNVConFinanciamiento);
       const ahorroMensual = ahorroSemanal * 4;
       const ahorroAnual = ahorroMensual * 12;
       const ahorro2Anos = datosAhorro[23];
       const ahorroMes24 = datosAhorro[23] - datosAhorro[22];
 
-      // Pintar KPIs
       q('#resumen').style.display = 'grid';
       q('#kpiSemanal').textContent = fmt.format(ahorroSemanal);
       q('#kpiMensual').textContent = fmt.format(ahorroMensual);
@@ -449,23 +427,19 @@
       q('#kpiAnual').textContent = fmt.format(ahorroAnual);
       q('#kpi24').textContent = fmt.format(ahorro2Anos);
 
-      // Mostrar elementos UI
       q('#graficaAhorro').style.display = 'block';
       q('#graficaFinanciamiento').style.display = 'block';
       q('#subResultados').style.display = 'block';
       q('#promo').style.display = 'block';
       q('#finMsg').style.display = 'block';
 
-      // ===== Gráficas =====
       const canvasAhorro = q('#graficaAhorro');
       const canvasFin = q('#graficaFinanciamiento');
-      // Asegurar ancho real antes de crear los charts
       canvasAhorro.width = canvasAhorro.clientWidth || 600;
       canvasFin.width = canvasFin.clientWidth || 600;
       const ctxAhorro = canvasAhorro.getContext('2d');
       const ctxFin = canvasFin.getContext('2d');
 
-      // Forzar un reflow y asegurar layout antes de crear los charts
       function nextFrame(cb){ requestAnimationFrame(() => setTimeout(cb, 0)); }
 
       const pluginsOpts = {
@@ -495,52 +469,47 @@
       };
 
       nextFrame(() => {
-      try {
-        window.myChartAhorro = new Chart(ctxAhorro, {
-          type: 'line',
-          data: {
-            labels: meses,
-            datasets: [{
-              label: 'Ahorro acumulado (MXN)',
-              data: datosAhorro,
-              borderColor: '#22c55e',
-              backgroundColor: 'rgba(34,197,94,.08)',
-              fill: true,
-              pointRadius: 2, tension: .25
-            }]
-          },
-          options: commonOptions
-        });
-      } catch (e) {
-        console.error('Error al dibujar graficaAhorro', e);
-      }
-    });
+        try {
+          window.myChartAhorro = new Chart(ctxAhorro, {
+            type: 'line',
+            data: {
+              labels: meses,
+              datasets: [{
+                label: 'Ahorro acumulado (MXN)',
+                data: datosAhorro,
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,.08)',
+                fill: true,
+                pointRadius: 2, tension: .25
+              }]
+            },
+            options: commonOptions
+          });
+        } catch (e) { console.error(e); }
+      });
 
       nextFrame(() => {
-      try {
-        window.myChartFinanciamiento = new Chart(ctxFin, {
-          type: 'line',
-          data: {
-            labels: meses,
-            datasets: [{
-              label: 'Pago acumulado de financiamiento (MXN)',
-              data: datosFin,
-              borderColor: '#1c6dd0',
-              backgroundColor: 'rgba(28,109,208,.08)',
-              fill: true,
-              pointRadius: 2, tension: .25
-            }]
-          },
-          options: commonOptions
-        });
-      } catch (e) {
-        console.error('Error al dibujar graficaFinanciamiento', e);
-      }
-    });
+        try {
+          window.myChartFinanciamiento = new Chart(ctxFin, {
+            type: 'line',
+            data: {
+              labels: meses,
+              datasets: [{
+                label: 'Pago acumulado de financiamiento (MXN)',
+                data: datosFin,
+                borderColor: '#1c6dd0',
+                backgroundColor: 'rgba(28,109,208,.08)',
+                fill: true,
+                pointRadius: 2, tension: .25
+              }]
+            },
+            options: commonOptions
+          });
+        } catch (e) { console.error(e); }
+      });
     }
 
-    // Estado inicial
-    limpiar();
+    limpiarInicial();
   </script>
 </body>
 </html>
