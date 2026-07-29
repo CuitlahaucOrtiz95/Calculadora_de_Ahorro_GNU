@@ -154,6 +154,83 @@
       .card { box-shadow: none; border: none; }
       .kpi strong { font-size: 18px; }
     }
+
+    /* ======================================================= */
+    /* 🔥 NUEVO: Logo flotante de GNU en la esquina IZQUIERDA */
+    /* ======================================================= */
+    .esquina-gnu {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 9999;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(4px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .esquina-gnu:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+    }
+    .esquina-gnu img {
+      max-height: 45px; /* Ajusta este tamaño si el logo es muy grande */
+      display: block;
+    }
+
+    /* ======================================================= */
+    /* 🔥 NUEVO: Logo flotante de Sparky en la esquina DERECHA */
+    /* ======================================================= */
+    .esquina-sparky {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 8px 14px 8px 8px;
+      border-radius: 50px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(4px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: default;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+    .esquina-sparky:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+    }
+    .esquina-sparky img {
+      width: 50px;
+      height: auto;
+      display: block;
+      border-radius: 50%; /* opcional: redondea la imagen del zorro */
+    }
+    .esquina-sparky .texto-sparky {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    /* Adaptación para móviles */
+    @media (max-width: 600px) {
+      .esquina-gnu img { max-height: 30px; }
+      .esquina-sparky img { width: 38px; }
+      .esquina-sparky .texto-sparky { font-size: 1.1rem; }
+      .esquina-sparky { padding: 5px 10px 5px 5px; gap: 6px; }
+      .esquina-gnu { padding: 6px 8px; }
+    }
+    @media print {
+      .esquina-gnu, .esquina-sparky { display: none !important; }
+    }
   </style>
 </head>
 <body>
@@ -161,8 +238,8 @@
     <!-- Header -->
     <div class="header" role="banner" aria-label="Encabezado de Sparky">
       <div class="brand" aria-hidden="true">
-        <!-- Reemplaza por tu logo real -->
-        <img src="Logo.png" alt="Logo GNU Gas Natural" />
+        <!-- Logo en el encabezado -->
+        <img src="logo-gnu.png" alt="Logo GNU Gas Natural" />
       </div>
       <h1>Sparky calcula tus ahorros con el uso de GNV</h1>
       <div class="mascot" aria-hidden="true">
@@ -251,6 +328,21 @@
     </div>
 
     <p class="footer">© GNU Gas Natural · Herramienta informativa. Los resultados son estimados y dependen de tu consumo real.</p>
+  </div>
+
+  <!-- ================================================ -->
+  <!-- 🔥 ESQUINA INFERIOR IZQUIERDA: LOGO GNU -->
+  <!-- ================================================ -->
+  <div class="esquina-gnu" aria-label="Logo GNU Gas Natural">
+    <img src="logo-gnu.png" alt="GNU Gas Natural" />
+  </div>
+
+  <!-- ================================================ -->
+  <!-- 🔥 ESQUINA INFERIOR DERECHA: SPARKY -->
+  <!-- ================================================ -->
+  <div class="esquina-sparky" aria-label="Logo de Sparky">
+    <img src="sparky.png" alt="Icono Sparky" />
+    <span class="texto-sparky">Sparky</span>
   </div>
 
   <script>
