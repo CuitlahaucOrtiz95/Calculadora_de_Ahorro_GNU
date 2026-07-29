@@ -251,11 +251,12 @@
     <div class="grid grid-cols-2">
       <section class="card" aria-labelledby="formTitle">
         <p id="formTitle" class="section-title">Entrada</p>
-        <form id="form" onsubmit="event.preventDefault(); calcularAhorro();">
+        <form id="form">
           <div class="field">
             <label for="gastoGasolina">¿Cuánto gastas semanalmente en gasolina? <span class="note">(MXN)</span></label>
             <span class="prefix">$</span>
-            <input type="number" id="gastoGasolina" inputmode="decimal" min="0" step="any" placeholder="Ej. 1200" aria-describedby="ayudaGasto" required />
+            <!-- AGREGUÉ oninput="calcularAhorro()" para que calcule automáticamente sin botones -->
+            <input type="number" id="gastoGasolina" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" placeholder="Ej. 1200" aria-describedby="ayudaGasto" required />
             <small id="ayudaGasto" class="note">Usa números positivos. Este valor se utiliza para calcular litros consumidos por semana.</small>
           </div>
 
@@ -265,38 +266,31 @@
               <div class="field">
                 <label for="precioGasolina">Precio gasolina (MXN/L)</label>
                 <span class="prefix">$</span>
-                <input type="number" id="precioGasolina" inputmode="decimal" min="0" step="any" value="23.99" />
+                <input type="number" id="precioGasolina" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" value="23.99" />
               </div>
               <div class="field">
                 <label for="precioGNVConFin">Precio GNV con financiamiento (MXN/L)</label>
                 <span class="prefix">$</span>
-                <input type="number" id="precioGNVConFin" inputmode="decimal" min="0" step="any" value="20.00" />
+                <input type="number" id="precioGNVConFin" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" value="20.00" />
               </div>
               <div class="field">
                 <label for="abonoPorLitro">Abono por litro a conversión (MXN/L)</label>
                 <span class="prefix">$</span>
-                <input type="number" id="abonoPorLitro" inputmode="decimal" min="0" step="any" value="6.76" />
+                <input type="number" id="abonoPorLitro" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" value="6.76" />
               </div>
               <div class="field">
                 <label for="precioGNVReal">Precio GNV real (sin financiamiento) (MXN/L)</label>
                 <span class="prefix">$</span>
-                <input type="number" id="precioGNVReal" inputmode="decimal" min="0" step="any" value="13.24" />
+                <input type="number" id="precioGNVReal" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" value="13.24" />
               </div>
               <div class="field">
                 <label for="financiamientoTotal">Costo conversión financiada (MXN)</label>
                 <span class="prefix">$</span>
-                <input type="number" id="financiamientoTotal" inputmode="decimal" min="0" step="any" value="32000" />
+                <input type="number" id="financiamientoTotal" oninput="calcularAhorro()" inputmode="decimal" min="0" step="any" value="32000" />
               </div>
             </div>
             <p class="note" style="margin-top:8px">Estas variables NO cambian las fórmulas, solo permiten ajustar los supuestos con tus precios actuales.</p>
           </details>
-
-          <div class="actions" style="margin-top:14px">
-            <button type="submit" class="btn btn-primary">Calcular ahorro</button>
-            <button type="button" class="btn btn-outline" onclick="limpiar()">Limpiar</button>
-            <button type="button" id="btnImprimir" class="btn btn-outline" onclick="window.print()" style="display:none">Imprimir</button>
-            <a id="btnWhatsApp" class="btn btn-wa" href="#" target="_blank" rel="noopener" style="display:none">Compartir por WhatsApp</a>
-          </div>
         </form>
 
         <div id="promo" class="promo" style="display:none">
@@ -322,7 +316,6 @@
 
         <div id="finMsg" class="card" style="background:#f7fbff;border-style:dashed;margin-top:14px;display:none">
           <p style="margin:0"><strong>Financiamiento:</strong> En GNU tenemos un plan de financiamiento con hasta <strong>18 meses sin intereses</strong>. Mientras realizas cargas de GNV con nosotros, estarás pagando la conversión y <em>ahorrando desde el primer día</em>.</p>
-          <p style="margin:.5rem 0 0; color:#345e83; font-weight:600">Resultados previos</p>
         </div>
       </section>
     </div>
@@ -385,12 +378,13 @@
       q('#graficaFinanciamiento').style.display = 'none';
       q('#subResultados').style.display = 'none';
       q('#promo').style.display = 'none';
-      q('#btnImprimir').style.display = 'none';
-      q('#btnWhatsApp').style.display = 'none';
       q('#finMsg').style.display = 'none';
 
       if (window.myChartAhorro) { window.myChartAhorro.destroy(); }
       if (window.myChartFinanciamiento) { window.myChartFinanciamiento.destroy(); }
+      
+      // Llamamos a calcularAhorro para ocultar todo correctamente
+      // Pero si no hay dato, solo reiniciamos. 
     }
 
     // ===== Núcleo de cálculo (manteniendo fórmulas y lógica original) =====
@@ -405,8 +399,8 @@
       const precioGNVReal = leerNumero('precioGNVReal', 13.24);
       const financiamientoTotal = leerNumero('financiamientoTotal', 32000);
 
+      // Si el campo está vacío, no hacemos nada
       if (isNaN(gastoGasolina) || gastoGasolina <= 0) {
-        alert('Por favor, ingresa un gasto semanal válido en gasolina.');
         return;
       }
 
@@ -460,21 +454,7 @@
       q('#graficaFinanciamiento').style.display = 'block';
       q('#subResultados').style.display = 'block';
       q('#promo').style.display = 'block';
-      q('#btnImprimir').style.display = 'inline-flex';
-      q('#btnWhatsApp').style.display = 'inline-flex';
       q('#finMsg').style.display = 'block';
-
-      // Enlace dinámico de WhatsApp
-      const tel = '5210000000000'; // <-- Reemplaza por tu número de WhatsApp con LADA país
-      const resumen = [
-        '💡 *Sparky - Ahorro con GNV*',
-        `• Ahorro semanal: ${fmt.format(ahorroSemanal)}`,
-        `• Ahorro mensual: ${fmt.format(ahorroMensual)}`,
-        `• Ahorro mensual al finalizar conversión: ${fmt.format(ahorroMes24)}`,
-        `• Ahorro acumulado 12 meses (aprox.): ${fmt.format(ahorroAnual)}`,
-        `• Ahorro acumulado 24 meses: ${fmt.format(ahorro2Anos)}`
-      ].join('%0A');
-      q('#btnWhatsApp').href = `https://wa.me/${tel}?text=${resumen}`;
 
       // ===== Gráficas =====
       const canvasAhorro = q('#graficaAhorro');
@@ -533,7 +513,6 @@
         });
       } catch (e) {
         console.error('Error al dibujar graficaAhorro', e);
-        alert('No se pudo dibujar la gráfica de ahorro. Verifica la carga de Chart.js.');
       }
     });
 
@@ -556,7 +535,6 @@
         });
       } catch (e) {
         console.error('Error al dibujar graficaFinanciamiento', e);
-        alert('No se pudo dibujar la gráfica de financiamiento. Verifica la carga de Chart.js.');
       }
     });
     }
