@@ -1,114 +1,476 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integración de Sparky</title>
-    <style>
-        /* Reset básico */
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f9;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Sparky · Calculadora de Ahorro con GNV (Pro)</title>
+  <!-- Tipografía profesional -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js v3 + plugin de anotaciones compatible -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1" onerror="var s=document.createElement('script');s.src='https://unpkg.com/chart.js@3.9.1/dist/chart.min.js';document.head.appendChild(s);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0" onerror="var s=document.createElement('script');s.src='https://unpkg.com/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js';document.head.appendChild(s);"></script>
 
-        /* Contenido de ejemplo para que veas cómo queda */
-        .contenido-principal {
-            text-align: center;
-            padding: 40px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            max-width: 600px;
-        }
+  <style>
+    :root {
+      --bg: #f6f9fc;
+      --surface: #ffffff;
+      --text: #0b4f8a; /* Primario oscuro */
+      --subtle: #7a8aa0;
+      --primary: #1c6dd0; /* Accento */
+      --primary-600: #105db3;
+      --accent: #ffd24d; /* Dourado suave */
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --ring: rgba(28, 109, 208, 0.35);
+      --shadow: 0 10px 30px rgba(11, 79, 138, 0.12);
+      --radius: 14px;
+    }
 
-        .contenido-principal h1 {
-            color: #333;
-        }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(28, 109, 208, .18), transparent 60%),
+        radial-gradient(1000px 500px at -10% 30%, rgba(255, 210, 77, .18), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
 
-        /* --- AQUÍ EMPIEZA EL CÓDIGO DE LA ESQUINA CON SPARKY --- */
-        
-        .esquina-sparky {
-            /* Posición fija en la esquina inferior derecha */
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            z-index: 9999;
-            
-            /* Diseño flexible para alinear la imagen y el texto */
-            display: flex;
-            flex-direction: row; /* Ponemos el texto al lado, o cambia a column si prefieres abajo */
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 12px 16px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(5px);
-            transition: transform 0.3s ease;
-            cursor: default;
-        }
+    .shell {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+    }
 
-        /* Efecto al pasar el mouse */
-        .esquina-sparky:hover {
-            transform: scale(1.05);
-        }
+    .header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: saturate(1.2) blur(6px);
+      border: 1px solid rgba(12, 58, 98, 0.06);
+      border-radius: calc(var(--radius) + 6px);
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 14px; margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .header h1 {
+      font-size: clamp(16px, 2.4vw, 20px);
+      line-height: 1.2; margin: 0; font-weight: 700;
+      color: var(--primary);
+      text-align: center; flex: 1;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 120px; }
+    .brand img { max-height: 44px; display: block; }
+    .mascot img { max-height: 40px; display: block; }
 
-        /* Estilo del zorro */
-        .esquina-sparky img {
-            width: 70px; /* Ajusta este tamaño a tu gusto */
-            height: auto;
-            display: block;
-            /* Si quieres que parezca un círculo, descomenta la línea de abajo */
-            /* border-radius: 50%; */
-        }
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(12, 58, 98, 0.06);
+      padding: clamp(16px, 2.4vw, 28px);
+    }
 
-        /* Estilo del texto "Sparky" */
-        .esquina-sparky .texto-sparky {
-            font-family: 'Arial Black', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
-            color: #2b6cb0; /* Un azul que combine con el zorro */
-            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
-            letter-spacing: 1px;
-            line-height: 1;
-        }
+    .grid { display: grid; gap: 16px; }
+    @media (min-width: 900px) {
+      .grid-cols-2 { grid-template-columns: 1.05fr .95fr; }
+    }
 
-        /* Para móviles, hazlo un poco más pequeño */
-        @media (max-width: 600px) {
-            .esquina-sparky img {
-                width: 50px;
-            }
-            .esquina-sparky .texto-sparky {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
+    .section-title {
+      margin: 0 0 8px; font-size: 14px; letter-spacing: .04em;
+      font-weight: 700; text-transform: uppercase; color: var(--subtle);
+    }
+
+    label { font-weight: 600; color: var(--text); display: inline-block; margin-bottom: 8px; }
+    .field {
+      position: relative;
+    }
+    .field input[type="number"] {
+      width: 100%; appearance: textfield;
+      background: #fbfdff; color: #0b2a44;
+      border: 1.5px solid #d9e5f3;
+      border-radius: 12px; padding: 14px 14px 14px 44px;
+      font-size: 16px; outline: none; transition: .2s border, .2s box-shadow, .2s background;
+    }
+    .field input[type="number"]:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 6px var(--ring); background: #fff;
+    }
+    .prefix {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: #728a9f; font-weight: 600;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .btn {
+      border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700;
+      cursor: pointer; transition: .2s transform, .2s filter, .2s background-color;
+      box-shadow: var(--shadow);
+    }
+    .btn:active { transform: translateY(1px); filter: saturate(.9); }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-600); }
+    .btn-outline { background: #fff; color: var(--primary); border: 1.5px solid #cfe2f8; }
+    .btn-success { background: var(--ok); color: #fff; }
+    .btn-wa { background: #25D366; color: #fff; }
+
+    .kpis { display: grid; gap: 12px; grid-template-columns: repeat(1, minmax(0, 1fr)); }
+    @media (min-width: 720px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .kpi {
+      background: #f7fbff; border: 1px solid #e5f0fb; border-radius: 12px; padding: 14px;
+    }
+    .kpi small { display: block; color: var(--subtle); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+    .kpi strong { display: block; font-size: clamp(18px, 2.4vw, 22px); color: #0b2a44; margin-top: 6px; }
+
+    .charts { display: grid; gap: 16px; }
+    canvas { background: #fff; border-radius: 12px; padding: 8px; border: 1px solid #e5eef9; width: 100%; height: 260px; max-height: 320px; }
+
+    .promo {
+      margin-top: 16px; border-radius: 12px; background: #fffbeb; color: #5a4200;
+      border: 1px dashed #f0d38a; padding: 12px 14px; font-weight: 600; text-align: center;
+    }
+
+    details.advanced { margin-top: 8px; }
+    details.advanced > summary {
+      list-style: none; cursor: pointer; user-select: none;
+      padding: 10px 12px; border-radius: 10px; border: 1px solid #e0ecf9; background: #f7fbff; font-weight: 600; color: #325a7f;
+    }
+    details.advanced[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .advanced-body { border: 1px solid #e0ecf9; border-top: 0; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; padding: 12px; background: #fff; }
+
+    .note { color: var(--subtle); font-size: 13px; }
+
+    .footer { margin: 22px 0 8px; color: #6b8196; font-size: 12px; text-align: center; }
+
+    @media print {
+      .header, details, .actions .btn-outline, .btn-wa { display: none !important; }
+      body { background: #fff; }
+      .card { box-shadow: none; border: none; }
+      .kpi strong { font-size: 18px; }
+    }
+  </style>
 </head>
 <body>
-
-    <!-- Contenido de la página de prueba -->
-    <div class="contenido-principal">
-        <h1>¡Bienvenido!</h1>
-        <p>Este es un ejemplo de página. En la esquina inferior derecha verás a <strong>Sparky</strong> integrado con su texto.</p>
-        <p>Puedes cambiar la posición en el CSS (bottom, left, right, top) o hacerlo responsive.</p>
+  <div class="shell">
+    <!-- Header -->
+    <div class="header" role="banner" aria-label="Encabezado de Sparky">
+      <div class="brand" aria-hidden="true">
+        <!-- Reemplaza por tu logo real -->
+        <img src="Logo.png" alt="Logo GNU Gas Natural" />
+      </div>
+      <h1>Sparky calcula tus ahorros con el uso de GNV</h1>
+      <div class="mascot" aria-hidden="true">
+        <img src="sparky.png" alt="Sparky" />
+      </div>
     </div>
 
-    <!-- --- COMPONENTE DE ESQUINA DE SPARKY --- -->
-    <div class="esquina-sparky">
-        <!-- 
-            INSTRUCCIÓN IMPORTANTE: 
-            Cambia el 'src' por la ubicación real de tu archivo PNG en tu proyecto.
-            Si lo tienes en la misma carpeta, pon: src="nombre-del-zorro.png"
-        -->
-        <img src="https://via.placeholder.com/150x150/3b82f6/ffffff?text=ZORRO+PNG" alt="Zorro Sparky" id="logo-sparky">
-        <span class="texto-sparky">Sparky</span>
+    <!-- Contenido principal -->
+    <div class="grid grid-cols-2">
+      <section class="card" aria-labelledby="formTitle">
+        <p id="formTitle" class="section-title">Entrada</p>
+        <form id="form" onsubmit="event.preventDefault(); calcularAhorro();">
+          <div class="field">
+            <label for="gastoGasolina">¿Cuánto gastas semanalmente en gasolina? <span class="note">(MXN)</span></label>
+            <span class="prefix">$</span>
+            <input type="number" id="gastoGasolina" inputmode="decimal" min="0" step="any" placeholder="Ej. 1200" aria-describedby="ayudaGasto" required />
+            <small id="ayudaGasto" class="note">Usa números positivos. Este valor se utiliza para calcular litros consumidos por semana.</small>
+          </div>
+
+          <details class="advanced">
+            <summary>⚙️ Ajustes avanzados (opcional)</summary>
+            <div class="advanced-body grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+              <div class="field">
+                <label for="precioGasolina">Precio gasolina (MXN/L)</label>
+                <span class="prefix">$</span>
+                <input type="number" id="precioGasolina" inputmode="decimal" min="0" step="any" value="23.99" />
+              </div>
+              <div class="field">
+                <label for="precioGNVConFin">Precio GNV con financiamiento (MXN/L)</label>
+                <span class="prefix">$</span>
+                <input type="number" id="precioGNVConFin" inputmode="decimal" min="0" step="any" value="20.00" />
+              </div>
+              <div class="field">
+                <label for="abonoPorLitro">Abono por litro a conversión (MXN/L)</label>
+                <span class="prefix">$</span>
+                <input type="number" id="abonoPorLitro" inputmode="decimal" min="0" step="any" value="6.76" />
+              </div>
+              <div class="field">
+                <label for="precioGNVReal">Precio GNV real (sin financiamiento) (MXN/L)</label>
+                <span class="prefix">$</span>
+                <input type="number" id="precioGNVReal" inputmode="decimal" min="0" step="any" value="13.24" />
+              </div>
+              <div class="field">
+                <label for="financiamientoTotal">Costo conversión financiada (MXN)</label>
+                <span class="prefix">$</span>
+                <input type="number" id="financiamientoTotal" inputmode="decimal" min="0" step="any" value="32000" />
+              </div>
+            </div>
+            <p class="note" style="margin-top:8px">Estas variables NO cambian las fórmulas, solo permiten ajustar los supuestos con tus precios actuales.</p>
+          </details>
+
+          <div class="actions" style="margin-top:14px">
+            <button type="submit" class="btn btn-primary">Calcular ahorro</button>
+            <button type="button" class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+            <button type="button" id="btnImprimir" class="btn btn-outline" onclick="window.print()" style="display:none">Imprimir</button>
+            <a id="btnWhatsApp" class="btn btn-wa" href="#" target="_blank" rel="noopener" style="display:none">Compartir por WhatsApp</a>
+          </div>
+        </form>
+
+        <div id="promo" class="promo" style="display:none">
+          Si presentas este cálculo en GNU para validar tu información, te invitamos una de las famosas <strong>Tortas de milanesa de Speedy Gonzáles</strong> mientras te contamos los beneficios del GNV. 💬
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="resultTitle">
+        <p id="resultTitle" class="section-title">Resultados</p>
+        <div id="resumen" class="kpis" style="display:none">
+          <div class="kpi"><small>Ahorro semanal estimado</small><strong id="kpiSemanal">—</strong></div>
+          <div class="kpi"><small>Ahorro mensual estimado</small><strong id="kpiMensual">—</strong></div>
+          <div class="kpi"><small>Ahorro mensual tras finalizar conversión</small><strong id="kpiMensual24">—</strong></div>
+          <div class="kpi"><small>Ahorro acumulado al primer año</small><strong id="kpiAnual">—</strong></div>
+          <div class="kpi"><small>Ahorro acumulado a 24 meses</small><strong id="kpi24">—</strong></div>
+        </div>
+
+        <h3 id="subResultados" style="display:none; margin:16px 0 6px; color: var(--primary);">Gráficas</h3>
+        <div class="charts">
+          <canvas id="graficaAhorro" height="260" style="display:none"></canvas>
+          <canvas id="graficaFinanciamiento" height="260" style="display:none"></canvas>
+        </div>
+
+        <div id="finMsg" class="card" style="background:#f7fbff;border-style:dashed;margin-top:14px;display:none">
+          <p style="margin:0"><strong>Financiamiento:</strong> En GNU tenemos un plan de financiamiento con hasta <strong>18 meses sin intereses</strong>. Mientras realizas cargas de GNV con nosotros, estarás pagando la conversión y <em>ahorrando desde el primer día</em>.</p>
+          <p style="margin:.5rem 0 0; color:#345e83; font-weight:600">Resultados previos</p>
+        </div>
+      </section>
     </div>
 
+    <p class="footer">© GNU Gas Natural · Herramienta informativa. Los resultados son estimados y dependen de tu consumo real.</p>
+  </div>
+
+  <script>
+    // Registro del plugin de anotaciones para Chart.js (v3)
+    (function(){
+      function registrarAnnotation(){
+        try {
+          if (window.Chart && (window['chartjs-plugin-annotation'] || window.ChartAnnotation)) {
+            const Annotation = window['chartjs-plugin-annotation'] || window.ChartAnnotation;
+            Chart.register(Annotation);
+            console.info('chartjs-plugin-annotation registrado');
+          }
+        } catch (e) {
+          console.warn('No se pudo registrar chartjs-plugin-annotation', e);
+        }
+      }
+      if (document.readyState === 'complete') registrarAnnotation();
+      else window.addEventListener('load', registrarAnnotation);
+    })();
+    // ===== Utilidades =====
+    const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const q = (sel) => document.querySelector(sel);
+
+    function leerNumero(id, fallback) {
+      const n = parseFloat(q('#' + id).value);
+      return isNaN(n) ? fallback : n;
+    }
+
+    function limpiar() {
+      q('#form').reset();
+      // Restablecer valores por defecto de avanzados
+      q('#precioGasolina').value = '23.99';
+      q('#precioGNVConFin').value = '20.00';
+      q('#abonoPorLitro').value = '6.76';
+      q('#precioGNVReal').value = '13.24';
+      q('#financiamientoTotal').value = '32000';
+
+      q('#resumen').style.display = 'none';
+      q('#graficaAhorro').style.display = 'none';
+      q('#graficaFinanciamiento').style.display = 'none';
+      q('#subResultados').style.display = 'none';
+      q('#promo').style.display = 'none';
+      q('#btnImprimir').style.display = 'none';
+      q('#btnWhatsApp').style.display = 'none';
+      q('#finMsg').style.display = 'none';
+
+      if (window.myChartAhorro) { window.myChartAhorro.destroy(); }
+      if (window.myChartFinanciamiento) { window.myChartFinanciamiento.destroy(); }
+    }
+
+    // ===== Núcleo de cálculo (manteniendo fórmulas y lógica original) =====
+    function calcularAhorro() {
+      if (window.myChartAhorro) window.myChartAhorro.destroy();
+      if (window.myChartFinanciamiento) window.myChartFinanciamiento.destroy();
+
+      const gastoGasolina = leerNumero('gastoGasolina', NaN);
+      const precioGasolina = leerNumero('precioGasolina', 23.99);
+      const precioGNVConFinanciamiento = leerNumero('precioGNVConFin', 20.00);
+      const abonoPorLitro = leerNumero('abonoPorLitro', 6.76);
+      const precioGNVReal = leerNumero('precioGNVReal', 13.24);
+      const financiamientoTotal = leerNumero('financiamientoTotal', 32000);
+
+      if (isNaN(gastoGasolina) || gastoGasolina <= 0) {
+        alert('Por favor, ingresa un gasto semanal válido en gasolina.');
+        return;
+      }
+
+      const litrosConsumidos = gastoGasolina / precioGasolina;
+      const pagoMensual = litrosConsumidos * abonoPorLitro * 4;
+      const ahorroMensualConFin = litrosConsumidos * (precioGasolina - precioGNVConFinanciamiento) * 4;
+      const ahorroMensualSinFin = litrosConsumidos * (precioGasolina - precioGNVReal) * 4;
+
+      const meses = Array.from({ length: 24 }, (_, i) => i + 1);
+
+      // Progresión del financiamiento (igual a la lógica original)
+      let acumuladoFin = 0;
+      let finMes = 24; // marcador de fin de pago
+      let alcanzado = false;
+      const datosFin = meses.map((mes) => {
+        if (!alcanzado && (mes === 18 || (acumuladoFin + pagoMensual) >= financiamientoTotal)) {
+          acumuladoFin = financiamientoTotal;
+          finMes = mes - 0.9999; // trazo de línea entre meses
+          alcanzado = true;
+        } else if (!alcanzado) {
+          acumuladoFin += pagoMensual;
+        }
+        return acumuladoFin;
+      });
+
+      // Ahorro acumulado con/ sin financiamiento (misma lógica)
+      let acumuladoAhorro = 0;
+      const datosAhorro = meses.map((mes) => {
+        const ahorroMes = mes <= finMes ? ahorroMensualConFin : ahorroMensualSinFin;
+        acumuladoAhorro += ahorroMes;
+        return Math.max(0, acumuladoAhorro);
+      });
+
+      // KPIs (manteniendo definiciones originales)
+      const ahorroSemanal = litrosConsumidos * (precioGasolina - precioGNVConFinanciamiento);
+      const ahorroMensual = ahorroSemanal * 4;
+      const ahorroAnual = ahorroMensual * 12;
+      const ahorro2Anos = datosAhorro[23];
+      const ahorroMes24 = datosAhorro[23] - datosAhorro[22];
+
+      // Pintar KPIs
+      q('#resumen').style.display = 'grid';
+      q('#kpiSemanal').textContent = fmt.format(ahorroSemanal);
+      q('#kpiMensual').textContent = fmt.format(ahorroMensual);
+      q('#kpiMensual24').textContent = fmt.format(ahorroMes24);
+      q('#kpiAnual').textContent = fmt.format(ahorroAnual);
+      q('#kpi24').textContent = fmt.format(ahorro2Anos);
+
+      // Mostrar elementos UI
+      q('#graficaAhorro').style.display = 'block';
+      q('#graficaFinanciamiento').style.display = 'block';
+      q('#subResultados').style.display = 'block';
+      q('#promo').style.display = 'block';
+      q('#btnImprimir').style.display = 'inline-flex';
+      q('#btnWhatsApp').style.display = 'inline-flex';
+      q('#finMsg').style.display = 'block';
+
+      // Enlace dinámico de WhatsApp
+      const tel = '5210000000000'; // <-- Reemplaza por tu número de WhatsApp con LADA país
+      const resumen = [
+        '💡 *Sparky - Ahorro con GNV*',
+        `• Ahorro semanal: ${fmt.format(ahorroSemanal)}`,
+        `• Ahorro mensual: ${fmt.format(ahorroMensual)}`,
+        `• Ahorro mensual al finalizar conversión: ${fmt.format(ahorroMes24)}`,
+        `• Ahorro acumulado 12 meses (aprox.): ${fmt.format(ahorroAnual)}`,
+        `• Ahorro acumulado 24 meses: ${fmt.format(ahorro2Anos)}`
+      ].join('%0A');
+      q('#btnWhatsApp').href = `https://wa.me/${tel}?text=${resumen}`;
+
+      // ===== Gráficas =====
+      const canvasAhorro = q('#graficaAhorro');
+      const canvasFin = q('#graficaFinanciamiento');
+      // Asegurar ancho real antes de crear los charts
+      canvasAhorro.width = canvasAhorro.clientWidth || 600;
+      canvasFin.width = canvasFin.clientWidth || 600;
+      const ctxAhorro = canvasAhorro.getContext('2d');
+      const ctxFin = canvasFin.getContext('2d');
+
+      // Forzar un reflow y asegurar layout antes de crear los charts
+      function nextFrame(cb){ requestAnimationFrame(() => setTimeout(cb, 0)); }
+
+      const pluginsOpts = {
+        legend: { labels: { font: { family: 'Inter', size: 12 } } },
+        tooltip: { titleFont: { family: 'Inter' }, bodyFont: { family: 'Inter' } }
+      };
+      if (window.ChartAnnotation || window['chartjs-plugin-annotation']) {
+        const Annotation = window['chartjs-plugin-annotation'] || window.ChartAnnotation;
+        pluginsOpts.annotation = {
+          annotations: {
+            corte: {
+              type: 'line', xMin: finMes, xMax: finMes,
+              borderColor: '#ef4444', borderWidth: 2, borderDash: [6,6],
+              label: { enabled: true, content: 'Fin de pagos', backgroundColor: 'rgba(239, 68, 68, .1)', color: '#b91c1c', position: 'start' }
+            }
+          }
+        };
+      }
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: pluginsOpts,
+        scales: {
+          x: { title: { display: true, text: 'Meses', font: { family: 'Inter', weight: '600' } }, grid: { color: 'rgba(12,58,98,.06)' } },
+          y: { title: { display: true, text: 'MXN acumulado', font: { family: 'Inter', weight: '600' } }, grid: { color: 'rgba(12,58,98,.06)' } }
+        }
+      };
+
+      nextFrame(() => {
+      try {
+        window.myChartAhorro = new Chart(ctxAhorro, {
+          type: 'line',
+          data: {
+            labels: meses,
+            datasets: [{
+              label: 'Ahorro acumulado (MXN)',
+              data: datosAhorro,
+              borderColor: '#22c55e',
+              backgroundColor: 'rgba(34,197,94,.08)',
+              fill: true,
+              pointRadius: 2, tension: .25
+            }]
+          },
+          options: commonOptions
+        });
+      } catch (e) {
+        console.error('Error al dibujar graficaAhorro', e);
+        alert('No se pudo dibujar la gráfica de ahorro. Verifica la carga de Chart.js.');
+      }
+    });
+
+      nextFrame(() => {
+      try {
+        window.myChartFinanciamiento = new Chart(ctxFin, {
+          type: 'line',
+          data: {
+            labels: meses,
+            datasets: [{
+              label: 'Pago acumulado de financiamiento (MXN)',
+              data: datosFin,
+              borderColor: '#1c6dd0',
+              backgroundColor: 'rgba(28,109,208,.08)',
+              fill: true,
+              pointRadius: 2, tension: .25
+            }]
+          },
+          options: commonOptions
+        });
+      } catch (e) {
+        console.error('Error al dibujar graficaFinanciamiento', e);
+        alert('No se pudo dibujar la gráfica de financiamiento. Verifica la carga de Chart.js.');
+      }
+    });
+    }
+
+    // Estado inicial
+    limpiar();
+  </script>
 </body>
 </html>
